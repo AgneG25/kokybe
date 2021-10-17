@@ -1,23 +1,28 @@
-name: Build
-on:
+name: CI
+on: 
   push:
+    branches: 
+      - master
+      - feature/*
+  pull_request:
+    # The branches below must be a subset of the branches above
     branches:
-      - master # or the name of your main branch
+      - master
+      - feature/*
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
     steps:
       - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
         with:
-          fetch-depth: 0
-      - uses: sonarsource/sonarqube-scan-action@master
+          node-version: ${{ matrix.node-version }}
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
